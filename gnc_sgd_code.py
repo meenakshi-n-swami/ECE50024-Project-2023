@@ -64,24 +64,6 @@ def gnc_logreg(X, y, epsilon, max_iters):
     end_time = time.time()
     return weights,i,end_time-start_time
 
-#function to perform newton-raphson
-def nr_logreg(X, y, epsilon, max_iters):
-    start_time = time.time()
-    w = np.ones((X.shape[1], 1))
-    for i in range(max_iters):
-        z,f,p,res,var_0 = residuals(w,X,y)
-        z = X.dot(w)
-        p = expit(z)
-        grad = np.mean(f, axis=0).reshape((-1, 1))
-        diagonal = (np.diagflat(p * (1 - p)))
-        hess = X.T.dot(diagonal).dot(X)
-        eigenvalues = np.linalg.eigvals(hess)
-        if np.min(eigenvalues) < epsilon:
-            hess += np.eye(X.shape[1]) * (epsilon - np.min(eigenvalues))
-        w -= np.linalg.inv(hess).dot(grad)
-    end_time = time.time()
-    return w,i,end_time-start_time
-
 #function to generate problem data
 def problem(N0,outlier_frac):
     mu0 = 0
@@ -136,11 +118,6 @@ for i in range(outlier_min,outlier_max,10):
     print(f"GNC weight vector for {i}% outliers: ", w_gnc.ravel())
     print(f"GNC iterations for {i}% outliers: ", i_gnc)
     print(f"GNC time for {i}% outliers: {time_gnc:,.3f}")
-    #fit logistic regression using NR
-    # w_nr,i_nr,time_nr= nr_logreg(X, y, epsilon,max_iters)
-    # print(f"NR weight vector for {i}% outliers: ", w_nr.ravel())
-    # print(f"NR iterations for {i}% outliers: ", i_nr)
-    # print(f"NR time for {i}% outliers: {time_nr:,.3f}")
     
     #plotting in one figure
     x_vals = np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), 100)
@@ -148,13 +125,11 @@ for i in range(outlier_min,outlier_max,10):
     #calculating fit
     y_gnc = expit(X_vals @ w_gnc)
     y_sgd = expit(X_vals @ w_sgd)
-    #y_nr = expit(X_vals @ w_nr)
     #plotting data
     axs[u][v].plot(X[:, 0], y, '*', markersize = '1', label = 'Data')
     #plotting fit curves
     axs[u][v].plot(x_vals, y_gnc,linewidth=2, color='green', label="Logit Regression with GNC")
     axs[u][v].plot(x_vals, y_sgd,linewidth=2, color= 'red', label="Logit Regression with SGD")
-    #axs[u][v].plot(x_vals, y_nr,linewidth=2, color= 'yellow', label="Logit Regression with NR")
     # axs[u][v].set_xlabel('X',fontsize = 20.0)
     # axs[u][v].set_ylabel('y',fontsize = 20.0)  
     axs[u][v].set_title(f'Logistic Regression fit with {i}% outliers', size=55)
@@ -169,17 +144,16 @@ fig.legend(handles, labels, loc=(0.80,0.93), fontsize = 51)
 plt.suptitle('Comparing Logistic Regression Fit with GNC and SGD for Various Outlier Ratios', fontsize = 70,x=0.50,y=0.92)
 plt.show()
 
-#plot GNC SGD NR fit curve individually
-plt.plot(X[:, 0], y, '*', markersize = '1', label = 'Data')
-x_vals = np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), 100)
-X_vals = np.vstack((x_vals, np.ones(x_vals.shape[0]))).T
-y_vals_gnc = expit(X_vals @ w_gnc)
-y_vals_sgd = expit(X_vals @ w_sgd)
-plt.plot(x_vals, y_vals_gnc,linewidth=2, color='green', label="Logit Regression with GNC")
-plt.plot(x_vals, y_vals_sgd,linewidth=2, color= 'red', label="Logit Regression with SGD")
-#plt.plot(x_vals, y_vals_nr,linewidth=2, color= 'yellow', label="Logit Regression with NR")
-plt.xlabel('X')
-plt.ylabel('y')
-plt.legend(fontsize='8')
-plt.title('Logistic Regression Fit for 69% Outlier Ratio')
-plt.show()
+##plot GNC SGD NR fit curve individually
+#plt.plot(X[:, 0], y, '*', markersize = '1', label = 'Data')
+#x_vals = np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), 100)
+#X_vals = np.vstack((x_vals, np.ones(x_vals.shape[0]))).T
+#y_vals_gnc = expit(X_vals @ w_gnc)
+#y_vals_sgd = expit(X_vals @ w_sgd)
+#plt.plot(x_vals, y_vals_gnc,linewidth=2, color='green', label="Logit Regression with GNC")
+#plt.plot(x_vals, y_vals_sgd,linewidth=2, color= 'red', label="Logit Regression with SGD")
+#plt.xlabel('X')
+#plt.ylabel('y')
+#plt.legend(fontsize='8')
+#plt.title('Logistic Regression Fit for 69% Outlier Ratio')
+#plt.show()
